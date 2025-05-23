@@ -11,20 +11,20 @@ def reveal_block(content):
 # Load Excel
 df = pd.read_excel("Matiks - Data Analyst Data.xlsx")
 
-# Preprocess Dates
 df['Last_Login'] = pd.to_datetime(df['Last_Login'])
 df['Signup_Date'] = pd.to_datetime(df['Signup_Date'])
 df['Last_Login_Date'] = df['Last_Login'].dt.date
 df['Week'] = df['Last_Login'].dt.strftime('%Y-%U')
 df['Month'] = df['Last_Login'].dt.to_period('M').astype(str)
 
-# Sidebar Filters
+
+
 st.sidebar.header("Filter Users")
 selected_device = st.sidebar.selectbox("Device Type", options=["All"] + sorted(df['Device_Type'].dropna().unique().tolist()))
 selected_subscription = st.sidebar.selectbox("Subscription Tier", options=["All"] + sorted(df['Subscription_Tier'].dropna().unique().tolist()))
 selected_mode = st.sidebar.selectbox("Game Mode", options=["All"] + sorted(df['Preferred_Game_Mode'].dropna().unique().tolist()))
 
-# Apply Filters
+
 filtered_df = df.copy()
 if selected_device != "All":
     filtered_df = filtered_df[filtered_df['Device_Type'] == selected_device]
@@ -33,6 +33,8 @@ if selected_subscription != "All":
 if selected_mode != "All":
     filtered_df = filtered_df[filtered_df['Preferred_Game_Mode'] == selected_mode]
 
+
+
 # DAU
 dau = (
     filtered_df.groupby('Last_Login_Date')['User_ID']
@@ -40,6 +42,7 @@ dau = (
     .reset_index(name='DAU')
     .sort_values('Last_Login_Date')
 )
+
 # WAU
 wau = (
     filtered_df.groupby('Week')['User_ID']
@@ -55,6 +58,7 @@ mau = (
     .sort_values('Month')
 )
 
+
 # Revenue Trend
 monthly_revenue = (
     filtered_df.groupby('Month')['Total_Revenue_USD']
@@ -63,7 +67,8 @@ monthly_revenue = (
     .sort_values('Month')
 )
 
-# Streamlit UI
+
+
 st.title("Matiks User Engagement Dashboard")
 
 st.subheader("Daily Active Users")
@@ -106,10 +111,9 @@ fig_sessions.update_layout(
 )
 st.plotly_chart(fig_sessions)
 
-# --- New Granular Average Sessions Per User Charts ---
+
 st.subheader("Average Sessions Per User - Daily, Weekly, Monthly")
 
-# Daily
 filtered_df['Login_Date'] = filtered_df['Last_Login'].dt.date
 avg_daily = (
     filtered_df.groupby('Login_Date')[['Total_Play_Sessions', 'User_ID']]
@@ -119,8 +123,6 @@ avg_daily = (
 avg_daily['Avg_Sessions_Per_User'] = avg_daily['Total_Play_Sessions'] / avg_daily['User_ID']
 fig_daily = px.line(avg_daily, x="Login_Date", y="Avg_Sessions_Per_User", title="Daily Avg. Sessions Per User")
 st.plotly_chart(fig_daily)
-
-# Weekly
 filtered_df['Week'] = filtered_df['Last_Login'].dt.strftime('%Y-%U')
 avg_weekly = (
     filtered_df.groupby('Week')[['Total_Play_Sessions', 'User_ID']]
@@ -131,7 +133,7 @@ avg_weekly['Avg_Sessions_Per_User'] = avg_weekly['Total_Play_Sessions'] / avg_we
 fig_weekly = px.line(avg_weekly, x="Week", y="Avg_Sessions_Per_User", title="Weekly Avg. Sessions Per User")
 st.plotly_chart(fig_weekly)
 
-# Monthly (already computed above as avg_sessions_monthly)
+
 fig_monthly = px.line(avg_sessions_monthly, x="Month_Year", y="Avg_Sessions_Per_User", title="Monthly Avg. Sessions Per User")
 fig_monthly.update_layout(xaxis=dict(rangeslider=dict(visible=True, thickness=0.05)))
 st.plotly_chart(fig_monthly)
@@ -152,7 +154,6 @@ fig.update_layout(
 )
 st.plotly_chart(fig)
 
-# Long-Term Usage Duration Trend
 st.subheader("Average Session Duration Over Months")
 monthly_duration = (
     filtered_df.groupby('Month')['Avg_Session_Duration_Min']
